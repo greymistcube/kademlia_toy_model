@@ -44,11 +44,11 @@ def run_single_trial(
             )
         )
 
-    message = Message("test", 0)
     if seed_start:
         start_node = kademlia_network.seed
     else:
         start_node = kademlia_network.get_random_node()
+    message = Message("test", 0)
     kademlia_network.propagate_message(
         message, start_node.address
     )
@@ -115,9 +115,13 @@ def run_multiple_trials(
             )
         for _ in range(num_trials):
             kademlia_network.reset_messages()
+            if seed_start:
+                start_node = kademlia_network.seed
+            else:
+                start_node = kademlia_network.get_random_node()
             message = Message("test", 0)
             kademlia_network.propagate_message(
-                message, kademlia_network.seed.address
+                message, start_node.address
             )
             success = kademlia_network.propagation == kademlia_network.size
             success_results.append(success)
@@ -136,6 +140,10 @@ def run_multiple_trials(
                         broadcast_policy=broadcast_policy,
                     )
                 )
+            if seed_start:
+                start_node = kademlia_network.seed
+            else:
+                start_node = kademlia_network.get_random_node()
             message = Message("test", 0)
             kademlia_network.propagate_message(
                 message, kademlia_network.seed.address
