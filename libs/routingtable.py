@@ -1,6 +1,6 @@
 import abc
-from .address import Address, KademliaAddress
-from .bucket import Bucket
+from libs.address import Address, KademliaAddress
+from libs.bucket import Bucket
 
 class RoutingTable(abc.ABC):
     def __init__(self, address: Address):

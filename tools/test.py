@@ -1,6 +1,4 @@
-from libs.address import KademliaAddress
 from libs.policy import KademliaBroadcastPolicy, KademliaDiscoveryPolicy
-from libs.node import KademliaNode
 from libs.message import Message
 from libs.network import KademliaNetwork
 from tools import util

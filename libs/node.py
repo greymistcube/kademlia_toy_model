@@ -1,7 +1,6 @@
-from .address import KademliaAddress
-from .policy import KademliaBroadcastPolicy
-from .message import Message
-from .routingtable import KademliaRoutingTable
+from libs.address import KademliaAddress
+from libs.message import Message
+from libs.routingtable import KademliaRoutingTable
 
 class KademliaNode:
     def __init__(

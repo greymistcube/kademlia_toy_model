@@ -5,4 +5,4 @@ networks.
 
 # Usage
 
-Import test methods from `tools.test` and run accordingly.
+Import test methods from `tools.test` and `tools.util` and run accordingly.
