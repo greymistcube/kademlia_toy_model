@@ -1,4 +1,3 @@
-import random
 from .address import KademliaAddress
 from .policy import KademliaBroadcastPolicy
 from .message import Message
@@ -9,22 +8,11 @@ class KademliaNode:
         self,
         network,
         address: KademliaAddress,
-        broadcast_policy: KademliaBroadcastPolicy,
     ):
         self._network = network
         self._address = address
         self._routing_table = KademliaRoutingTable(address)
         self._message = None
-        self._broadcast_policy = broadcast_policy
-
-        if broadcast_policy.broadcast_type == KademliaBroadcastPolicy.FLOOD:
-            self.broadcast_message = self.flood_broadcast_message
-        elif broadcast_policy.broadcast_type == KademliaBroadcastPolicy.SELECT:
-            self.broadcast_message = self.select_broadcast_message
-        elif broadcast_policy.broadcast_type == KademliaBroadcastPolicy.RANDOM:
-            self.broadcast_message = self.random_broadcast_message
-        else:
-            raise ValueError("invalid broadcast policy")
         return
 
     def add_address(self, address: KademliaAddress):
@@ -50,27 +38,8 @@ class KademliaNode:
             )
         return
 
-    def flood_broadcast_message(self, message: str):
-        for peer in self.peers:
-            self.send_message(peer, message)
-        return
-
-    def select_broadcast_message(self, message: str):
-        for peer in self._routing_table.select_random_peers():
-            self.send_message(peer, message)
-        return
-
-    def random_broadcast_message(self, message: str):
-        try:
-            peers = random.sample(
-                self.peers,
-                self._broadcast_policy.broadcast_size,
-            )
-        except:
-            # if not enough peers, send to every peer
-            peers = self.peers
-        for peer in peers:
-            self.send_message(peer, message)
+    def broadcast_message(self, message: str):
+        self._network.broadcast_policy.broadcast_message(self, message)
         return
 
     def send_message(self, address: KademliaAddress, message: Message):

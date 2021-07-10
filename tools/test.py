@@ -3,51 +3,29 @@ from libs.policy import KademliaBroadcastPolicy, KademliaDiscoveryPolicy
 from libs.node import KademliaNode
 from libs.message import Message
 from libs.network import KademliaNetwork
+from tools import util
 
 def run_single_trial(
-    network_size: int,
-    broadcast_type: str,
-    broadcast_size: int,
-    discovery_type: str,
-    discovery_depth: int,
+    kademlia_network: KademliaNetwork,
     seed_start: bool,
 ):
-    if not broadcast_type in KademliaBroadcastPolicy.POLICIES:
-        raise ValueError("invalid broadcast type")
-    if not discovery_type in KademliaDiscoveryPolicy.POLICIES:
-        raise ValueError("invalid discovery type")
+    network_size = kademlia_network.size
+    discovery_type = kademlia_network.discovery_policy.discovery_type
+    discovery_depth = kademlia_network.discovery_policy.discovery_depth
+    broadcast_type = kademlia_network.broadcast_policy.broadcast_type
+    broadcast_size = kademlia_network.broadcast_policy.broadcast_size
 
     print("running a single trial with")
     print(f"    network size: {network_size}")
-    print(f"    broadcast type: {broadcast_type}")
-    if broadcast_type == KademliaBroadcastPolicy.RANDOM:
-        print(f"    broadcast size: {broadcast_size}")
     print(f"    discovery type: {discovery_type}")
     if discovery_type == KademliaDiscoveryPolicy.PARTIAL:
         print(f"    discovery depth: {discovery_depth}")
+    print(f"    broadcast type: {broadcast_type}")
+    if broadcast_type == KademliaBroadcastPolicy.RANDOM:
+        print(f"    broadcast size: {broadcast_size}")
 
-    broadcast_policy = KademliaBroadcastPolicy(
-        broadcast_type=broadcast_type,
-        broadcast_size=broadcast_size,
-    )
-    discovery_policy = KademliaDiscoveryPolicy(
-        discovery_type=discovery_type,
-        discovery_depth=discovery_depth,
-    )
-    kademlia_network = KademliaNetwork(discovery_policy)
-    for _ in range(network_size):
-        kademlia_network.add_node(
-            KademliaNode(
-                network=kademlia_network,
-                address=KademliaAddress.generate_random_address(),
-                broadcast_policy=broadcast_policy,
-            )
-        )
-
-    if seed_start:
-        start_node = kademlia_network.seed
-    else:
-        start_node = kademlia_network.get_random_node()
+    kademlia_network.reset()
+    start_node = util.get_start_node(kademlia_network, seed_start)
     message = Message("test", 0)
     kademlia_network.propagate_message(
         message, start_node.address
@@ -65,21 +43,17 @@ def run_single_trial(
     return
 
 def run_multiple_trials(
+    kademlia_network: KademliaNetwork,
     num_trials: int,
-    network_fixed: bool,
-    network_size: int,
-    broadcast_type: str,
-    broadcast_size: int,
-    discovery_type: str,
-    discovery_depth: int,
     seed_start: bool,
 ):
-    if not broadcast_type in KademliaBroadcastPolicy.POLICIES:
-        raise ValueError("invalid broadcast type")
-    if not discovery_type in KademliaDiscoveryPolicy.POLICIES:
-        raise ValueError("invalid discovery type")
+    network_size = kademlia_network.size
+    discovery_type = kademlia_network.discovery_policy.discovery_type
+    discovery_depth = kademlia_network.discovery_policy.discovery_depth
+    broadcast_type = kademlia_network.broadcast_policy.broadcast_type
+    broadcast_size = kademlia_network.broadcast_policy.broadcast_size
 
-    print("running trials with")
+    print("running multiple trials with")
     print(f"    number of trials: {num_trials}")
     print(f"    network size: {network_size}")
     print(f"    broadcast type: {broadcast_type}")
@@ -89,71 +63,24 @@ def run_multiple_trials(
     if discovery_type == KademliaDiscoveryPolicy.PARTIAL:
         print(f"    discovery depth: {discovery_depth}")
 
-    broadcast_policy = KademliaBroadcastPolicy(
-        broadcast_type=broadcast_type,
-        broadcast_size=broadcast_size,
-    )
-    discovery_policy = KademliaDiscoveryPolicy(
-        discovery_type=discovery_type,
-        discovery_depth=discovery_depth,
-    )
-
     success_results = []
     send_count_results = []
     max_hops_results = []
     propagation_results = []
 
-    if network_fixed:
-        kademlia_network = KademliaNetwork(discovery_policy)
-        for _ in range(network_size):
-            kademlia_network.add_node(
-                KademliaNode(
-                    network=kademlia_network,
-                    address=KademliaAddress.generate_random_address(),
-                    broadcast_policy=broadcast_policy,
-                )
-            )
-        for _ in range(num_trials):
-            kademlia_network.reset_messages()
-            if seed_start:
-                start_node = kademlia_network.seed
-            else:
-                start_node = kademlia_network.get_random_node()
-            message = Message("test", 0)
-            kademlia_network.propagate_message(
-                message, start_node.address
-            )
-            success = kademlia_network.propagation == kademlia_network.size
-            success_results.append(success)
-            if success:
-                send_count_results.append(kademlia_network.send_count)
-                max_hops_results.append(kademlia_network.max_hops)
-            propagation_results.append(kademlia_network.propagation)
-    else:
-        for _ in range(num_trials):
-            kademlia_network = KademliaNetwork(discovery_policy)
-            for _ in range(network_size):
-                kademlia_network.add_node(
-                    KademliaNode(
-                        network=kademlia_network,
-                        address=KademliaAddress.generate_random_address(),
-                        broadcast_policy=broadcast_policy,
-                    )
-                )
-            if seed_start:
-                start_node = kademlia_network.seed
-            else:
-                start_node = kademlia_network.get_random_node()
-            message = Message("test", 0)
-            kademlia_network.propagate_message(
-                message, kademlia_network.seed.address
-            )
-            success = kademlia_network.propagation == kademlia_network.size
-            success_results.append(success)
-            if success:
-                send_count_results.append(kademlia_network.send_count)
-                max_hops_results.append(kademlia_network.max_hops)
-            propagation_results.append(kademlia_network.propagation)
+    for _ in range(num_trials):
+        kademlia_network.reset()
+        start_node = util.get_start_node(kademlia_network, seed_start)
+        message = Message("test", 0)
+        kademlia_network.propagate_message(
+            message, start_node.address
+        )
+        success = kademlia_network.propagation == kademlia_network.size
+        success_results.append(success)
+        if success:
+            send_count_results.append(kademlia_network.send_count)
+            max_hops_results.append(kademlia_network.max_hops)
+        propagation_results.append(kademlia_network.propagation)
 
     print(f"number of successes: {sum(success_results)}")
     print(
