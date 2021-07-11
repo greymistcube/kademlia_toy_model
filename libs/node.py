@@ -2,11 +2,15 @@ from libs.address import KademliaAddress
 from libs.message import Message
 from libs.routingtable import KademliaRoutingTable
 
+import typing
+if typing.TYPE_CHECKING:
+    from libs.network import KademliaNetwork
+
 class KademliaNode:
     def __init__(
         self,
-        network,
-        address: KademliaAddress,
+        network: "KademliaNetwork",
+        address: "KademliaAddress",
     ):
         self._network = network
         self._address = address
@@ -14,20 +18,20 @@ class KademliaNode:
         self._message = None
         return
 
-    def add_address(self, address: KademliaAddress):
+    def add_address(self, address: "KademliaAddress"):
         self._routing_table.add_address(address)
         return
 
-    def get_neighbors(self, address: KademliaAddress) -> list:
+    def get_neighbors(self, address: "KademliaAddress") -> "list":
         return self._routing_table.get_neighbors(address)
 
-    def select_random_peers(self) -> list:
+    def select_random_peers(self) -> "list":
         return self._routing_table.select_random_peers()
 
-    def generate_random_addresses(self) -> list:
+    def generate_random_addresses(self) -> "list":
         return self._routing_table.generate_random_addresses()
 
-    def receive_message(self, message: Message):
+    def receive_message(self, message: "Message"):
         if not self._message:
             self._message = message
             self._network.queue_broadcast(
@@ -37,11 +41,11 @@ class KademliaNode:
             )
         return
 
-    def broadcast_message(self, message: str):
+    def broadcast_message(self, message: "Message"):
         self._network.broadcast_policy.broadcast_message(self, message)
         return
 
-    def send_message(self, address: KademliaAddress, message: Message):
+    def send_message(self, address: "KademliaAddress", message: "Message"):
         self._network.send_message(address, message)
         return
 
@@ -50,17 +54,17 @@ class KademliaNode:
         return
 
     @property
-    def address(self) -> KademliaAddress:
+    def address(self) -> "KademliaAddress":
         return self._address
 
     @property
-    def routing_table(self) -> KademliaRoutingTable:
+    def routing_table(self) -> "KademliaRoutingTable":
         return self._routing_table
 
     @property
-    def peers(self) -> list:
+    def peers(self) -> "list":
         return self._routing_table.peers
 
     @property
-    def message(self):
+    def message(self) -> "Message":
         return self._message

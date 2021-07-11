@@ -3,6 +3,13 @@ from libs.message import Message
 from libs.network import KademliaNetwork
 from tools import util
 
+RED_BOLD = "\033[031;1m"
+GREEN_BOLD = "\033[032;1m"
+BLUE_BOLD = "\033[034;1m"
+RESET = "\033[0m"
+TITLE_COLOR = BLUE_BOLD
+SUCCESS_COLORS = {False: RED_BOLD, True: GREEN_BOLD}
+
 def run_single_trial(
     kademlia_network: KademliaNetwork,
     seed_start: bool,
@@ -13,7 +20,7 @@ def run_single_trial(
     broadcast_type = kademlia_network.broadcast_policy.broadcast_type
     broadcast_size = kademlia_network.broadcast_policy.broadcast_size
 
-    print("running a single trial with")
+    print(f"{TITLE_COLOR}running a single trial with{RESET}")
     print(f"    network size: {network_size}")
     print(f"    discovery type: {discovery_type}")
     if discovery_type == KademliaDiscoveryPolicy.PARTIAL:
@@ -34,7 +41,10 @@ def run_single_trial(
         f"total non-empty buckets: "
         f"{sum(kademlia_network.non_empty_bucket_counts)}"
     )
-    print(f"success: {kademlia_network.propagation == kademlia_network.size}")
+    success = kademlia_network.propagation == kademlia_network.size
+    print(
+        f"success: "
+        f"{SUCCESS_COLORS[success]}{success}{RESET}")
     print(f"send count: {kademlia_network.send_count}")
     print(f"propagation: {kademlia_network.propagation}")
     print(f"max hops: {kademlia_network.max_hops}")
@@ -51,7 +61,7 @@ def run_multiple_trials(
     broadcast_type = kademlia_network.broadcast_policy.broadcast_type
     broadcast_size = kademlia_network.broadcast_policy.broadcast_size
 
-    print("running multiple trials with")
+    print(f"{TITLE_COLOR}running multiple trials with{RESET}")
     print(f"    number of trials: {num_trials}")
     print(f"    network size: {network_size}")
     print(f"    broadcast type: {broadcast_type}")
@@ -80,9 +90,13 @@ def run_multiple_trials(
             max_hops_results.append(kademlia_network.max_hops)
         propagation_results.append(kademlia_network.propagation)
 
-    print(f"number of successes: {sum(success_results)}")
+    success = sum(success_results) == num_trials
     print(
-        f"average propagation: "
+        f"number of successes: "
+        f"{SUCCESS_COLORS[success]}{sum(success_results)}{RESET}"
+    )
+    print(
+        f"    average propagation: "
         f"{sum(propagation_results) / len(propagation_results):.2f}"
     )
     max_hops_results = [
@@ -92,20 +106,20 @@ def run_multiple_trials(
     ]
     if send_count_results:
         print(
-            f"average send count for successes: "
+            f"    average send count for successes: "
             f"{sum(send_count_results) / len(send_count_results):.2f}"
         )
     else:
         print(
-            f"average send count for successes: invalid"
+            f"    average send count for successes: invalid"
         )
     if max_hops_results:
         print(
-            f"average max hops for successes: "
+            f"    average max hops for successes: "
             f"{sum(max_hops_results) / len(max_hops_results):.2f}"
         )
     else:
         print(
-            f"average max hops for successes: invalid"
+            f"    average max hops for successes: invalid"
         )
     return
