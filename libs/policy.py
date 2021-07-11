@@ -1,12 +1,18 @@
 import random
 
+import typing
+if typing.TYPE_CHECKING:
+    from libs.message import Message
+    from libs.network import KademliaNetwork
+    from libs.node import KademliaNode
+
 class KademliaDiscoveryPolicy:
     NONE = "none"
     PARTIAL = "partial"
     COMPLETE = "complete"
     POLICIES = [NONE, PARTIAL, COMPLETE]
 
-    def __init__(self, discovery_type: str, discovery_depth: int):
+    def __init__(self, discovery_type: "str", discovery_depth: "int"):
         if not discovery_type in KademliaDiscoveryPolicy.POLICIES:
             raise ValueError(f"invalid discovery type: {discovery_type}")
 
@@ -30,15 +36,28 @@ class KademliaDiscoveryPolicy:
             raise ValueError("invalid peer discovery policy")
         return
 
-    def discover_peers(self, network, node):
+    def discover_peers(
+        self,
+        network: "KademliaNetwork",
+        node: "KademliaNode",
+    ):
         self._discover_peers(network, node)
         return
 
-    def discover_peers_none(self, network, node):
+    def discover_peers_none(
+        self,
+        network: "KademliaNetwork",
+        node: "KademliaNode",
+    ):
         self.discover_peers_partial(network, node, 0)
         return
 
-    def discover_peers_partial(self, network, node, depth: int):
+    def discover_peers_partial(
+        self,
+        network: "KademliaNetwork",
+        node: "KademliaNode",
+        depth: "int"
+    ):
         network.seed.add_address(node.address)
         node.add_address(network.seed.address)
 
@@ -65,18 +84,22 @@ class KademliaDiscoveryPolicy:
             ]
         return
 
-    def discover_peers_complete(self, network, node):
+    def discover_peers_complete(
+        self,
+        network: "KademliaNetwork",
+        node: "KademliaNode",
+    ):
         for address in network.nodes:
             network.nodes[address].add_address(node.address)
             node.add_address(address)
         return
 
     @property
-    def discovery_type(self) -> str:
+    def discovery_type(self) -> "str":
         return self._discovery_type
 
     @property
-    def discovery_depth(self) -> int:
+    def discovery_depth(self) -> "int":
         return self._discovery_depth
 
 class KademliaBroadcastPolicy:
@@ -86,7 +109,7 @@ class KademliaBroadcastPolicy:
     HYBRID = "hybrid"
     POLICIES = [FLOOD, SELECT, RANDOM, HYBRID]
 
-    def __init__(self, broadcast_type: str, broadcast_size: int):
+    def __init__(self, broadcast_type: "str", broadcast_size: "int"):
         if broadcast_type not in KademliaBroadcastPolicy.POLICIES:
             raise ValueError(f"invalid broadcast type: {broadcast_type}")
 
@@ -115,22 +138,35 @@ class KademliaBroadcastPolicy:
             )
         return
 
-    def broadcast_message(self, node, message):
+    def broadcast_message(self, node: "KademliaNode", message: "Message"):
         self._broadcast_message(node, message)
         return
 
-    def flood_broadcast_message(self, node, message):
+    def flood_broadcast_message(
+        self,
+        node: "KademliaNode",
+        message: "Message",
+    ):
         for peer in node.peers:
             node.send_message(peer, message)
         return
 
-    def select_broadcast_message(self, node, message):
+    def select_broadcast_message(
+        self,
+        node: "KademliaNode",
+        message: "Message",
+    ):
         peers = node.routing_table.select_random_peers()
         for peer in peers:
             node.send_message(peer, message)
         return
 
-    def random_broadcast_message(self, node, message, size: int):
+    def random_broadcast_message(
+        self,
+        node: "KademliaNode",
+        message: "Message",
+        size: "int",
+    ):
         population = node.peers
         sample_size = min(size, len(population))
         peers = random.sample(population, sample_size)
@@ -138,7 +174,12 @@ class KademliaBroadcastPolicy:
             node.send_message(peer, message)
         return
 
-    def hybrid_broadcast_message(self, node, message, size: int):
+    def hybrid_broadcast_message(
+        self,
+        node: "KademliaNode",
+        message: "Message",
+        size: "int",
+    ):
         select_peers = node.routing_table.select_random_peers()
         population = node.peers
         sample_size = min(size, len(population))
@@ -149,9 +190,9 @@ class KademliaBroadcastPolicy:
         return
 
     @property
-    def broadcast_type(self) -> str:
+    def broadcast_type(self) -> "str":
         return self._broadcast_type
 
     @property
-    def broadcast_size(self) -> int:
+    def broadcast_size(self) -> "int":
         return self._broadcast_size

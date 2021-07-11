@@ -11,7 +11,7 @@ class RoutingTable(abc.ABC):
         return
 
     @abc.abstractmethod
-    def get_neighbors(self, address: Address):
+    def get_neighbors(self, address: Address) -> list:
         pass
 
     @abc.abstractmethod
@@ -19,16 +19,16 @@ class RoutingTable(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_distance(self, address: Address):
+    def get_distance(self, address: Address) -> int:
         pass
 
     @property
-    def address(self):
+    def address(self) -> Address:
         return self._address
 
     @property
     @abc.abstractmethod
-    def peers(self):
+    def peers(self) -> list:
         pass
 
 class KademliaRoutingTable(RoutingTable):
@@ -44,7 +44,7 @@ class KademliaRoutingTable(RoutingTable):
         self,
         address: KademliaAddress,
         n=Bucket.BUCKET_SIZE
-    ):
+    ) -> list:
         return sorted(
             self.peers,
             key=lambda peer: peer.get_distance(address)
@@ -55,7 +55,7 @@ class KademliaRoutingTable(RoutingTable):
         self._buckets[d].add_address(address)
         return
 
-    def get_distance(self, address: KademliaAddress):
+    def get_distance(self, address: KademliaAddress) -> int:
         return self.address.get_distance(address)
 
     def select_random_peers(self) -> list:
@@ -75,7 +75,7 @@ class KademliaRoutingTable(RoutingTable):
         ]
 
     @property
-    def buckets(self):
+    def buckets(self) -> list:
         return self._buckets
 
     @property
