@@ -2,7 +2,7 @@ import abc
 import numpy as np
 
 class Address(abc.ABC):
-    ADDRESS_LENGTH = 80
+    ADDRESS_LENGTH = 40
 
     @abc.abstractmethod
     def __init__(self, array: np.ndarray):
@@ -43,19 +43,25 @@ class Address(abc.ABC):
 
 class KademliaAddress(Address):
     def __init__(self, array: np.ndarray):
-        self._array = array
+        super().__init__(array)
+        self._distances = {}
         return
 
     def get_distance(self, address) -> int:
-        distance = Address.ADDRESS_LENGTH
-        xor = self.array ^ address.array
-        argmax = np.argmax(xor)
-        first = xor[0]
+        try:
+            return self._distances[address]
+        except:
+            distance = Address.ADDRESS_LENGTH
+            xor = self.array ^ address.array
+            argmax = np.argmax(xor)
+            first = xor[0]
 
-        if argmax or first:
-            return distance - argmax
-        else:
-            return 0
+            if argmax or first:
+                distance = distance - argmax
+            else:
+                distance = 0
+            self._distances[address] = distance
+            return self._distances[address]
 
     @staticmethod
     def generate_random_address():

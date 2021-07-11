@@ -2,7 +2,7 @@ import random
 from libs.address import KademliaAddress
 
 class Bucket:
-    BUCKET_SIZE = 16
+    BUCKET_SIZE = 10
 
     def __init__(self, address: KademliaAddress, distance: int):
         self._address = address

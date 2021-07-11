@@ -6,7 +6,7 @@ class KademliaDiscoveryPolicy:
     COMPLETE = "complete"
     POLICIES = [NONE, PARTIAL, COMPLETE]
 
-    def __init__(self, discovery_type: str, discovery_depth: int=1):
+    def __init__(self, discovery_type: str, discovery_depth: int):
         if not discovery_type in KademliaDiscoveryPolicy.POLICIES:
             raise ValueError(f"invalid discovery type: {discovery_type}")
 
@@ -83,7 +83,8 @@ class KademliaBroadcastPolicy:
     FLOOD = "flood"
     SELECT = "select"
     RANDOM = "random"
-    POLICIES = [FLOOD, SELECT, RANDOM]
+    HYBRID = "hybrid"
+    POLICIES = [FLOOD, SELECT, RANDOM, HYBRID]
 
     def __init__(self, broadcast_type: str, broadcast_size: int):
         if broadcast_type not in KademliaBroadcastPolicy.POLICIES:
@@ -104,6 +105,14 @@ class KademliaBroadcastPolicy:
                     self.broadcast_size,
                 )
             )
+        elif self.broadcast_type == KademliaBroadcastPolicy.HYBRID:
+            self._broadcast_message = (
+                lambda node, message: self.hybrid_broadcast_message(
+                    node,
+                    message,
+                    self.broadcast_size,
+                )
+            )
         return
 
     def broadcast_message(self, node, message):
@@ -116,19 +125,25 @@ class KademliaBroadcastPolicy:
         return
 
     def select_broadcast_message(self, node, message):
-        for peer in node.routing_table.select_random_peers():
+        peers = node.routing_table.select_random_peers()
+        for peer in peers:
             node.send_message(peer, message)
         return
 
-    def random_broadcast_message(self, node, message, size):
-        try:
-            peers = random.sample(
-                node.peers,
-                size,
-            )
-        except:
-            # if not enough peers, send to every peer
-            peers = node.peers
+    def random_broadcast_message(self, node, message, size: int):
+        population = node.peers
+        sample_size = min(size, len(population))
+        peers = random.sample(population, sample_size)
+        for peer in peers:
+            node.send_message(peer, message)
+        return
+
+    def hybrid_broadcast_message(self, node, message, size: int):
+        select_peers = node.routing_table.select_random_peers()
+        population = node.peers
+        sample_size = min(size, len(population))
+        random_peers = random.sample(population, sample_size)
+        peers = set(select_peers + random_peers)
         for peer in peers:
             node.send_message(peer, message)
         return
